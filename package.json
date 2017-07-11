@@ -16,8 +16,9 @@
     "url": "https://github.com/sreeharim/ticatactoe/issues"
   },
   "dependencies": {
-    "socket.io": "*",
-    "express": "*"
+    "angular": "^1.6.4",
+    "express": "*",
+    "socket.io": "*"
   },
   "homepage": "https://github.com/sreeharim/ticatactoe#readme"
 }

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Tic Tac Toe</title>
+	<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  		crossorigin="anonymous"></script>
+	<script type="text/javascript" src="js/angular.js"></script>
+	<script type="text/javascript" src="js/app.js"></script>
+	<script type="text/javascript" src="socket.io/socket.io.js"></script>
+  <style type="text/css">
+  	table,td{
+  		border:1px #000 solid;
+  	}
+  	table{
+  		height:200px;
+  		width:200px;
+  	}
+  </style>
+</head>
+</head>
+
+<body ng-controller="tttController" ng-app="tttApp">
+<div id="messages" style="display:none;height:100px; width:200px; border: 1px #000 solid;"></div>
+<div id="gameArea">
+	<table>
+		<tr ng-repeat="gameRow in gameBoard">
+			<td ng-disabled="!isMyTurn" ng-click="!isMyTurn||submitChange(gameRow.id,'zero');">{{gameRow.zero}}</td>
+			<td ng-disabled="!isMyTurn" ng-click="!isMyTurn||submitChange(gameRow.id,'one');">{{gameRow.one}}</td>
+			<td ng-disabled="!isMyTurn" ng-click="!isMyTurn||submitChange(gameRow.id,'two');">{{gameRow.two}}</td>
+		</tr>
+	</table>
+</div>
+</body>
+<script type="text/javascript">
+	var socket = null;
+	var $scope = null;
+	$(function(){
+		socket = io.connect();
+		$scope = angular.element('[ng-controller=tttController]').scope();
+		socket.emit('register','register');
+		socket.on('registered user',function(data){
+			console.log(data);
+			$scope.value = data.val;
+			$scope.isMyTurn = data.turn;
+		});
+		socket.on('update board',function(data){
+			$scope.gameBoard = data;
+		});
+
+
+	});
+	function submitChanges(row,key){
+			$scope.gameBoard = updateGameBoard($scope.gameBoard,row,key);
+			socket.emit('submit move',$scope.gameBoard);
+		}
+	function updateGameBoard(gameBoard, row, key){
+		for(var gameRow in gameBoard)
+			if(gameBoard[gameRow].id == row && gameBoard[gameRow][key] == -1){
+				gameBoard[gameRow][key] = $scope.value;
+				break;
+			}
+			return gameBoard;	
+	}
+</script>
+</html>

@@ -5,9 +5,30 @@ var app = angular.module("tttApp",[])
 									 {zero:-1,one:-1,two:-1,id:"r3"}
 									];
 					$scope.gameBoard = gameBoard;
-					$scope.isMyTurn = false;						
+					$scope.isMyTurn = false;
+					$scope.socket = io.connect();
+					$scope.socket.emit('register','register');
+					$scope.socket.on('registered user',function(data){
+								console.log(data);
+								$scope.value = data.val;
+								$scope.isMyTurn = data.turn;
+								});
+					$scope.socket.on('update board',function(data){
+								$scope.gameBoard = data;
+								 $scope.$apply();
+								});
+						
 					$scope.submitChange = function(row,key) {
-        				submitChanges(row,key);
-    						};
+        					$scope.gameBoard = $scope.updateGameBoard($scope.gameBoard,row,key,$scope.value);
+							$scope.socket.emit('submit move',$scope.gameBoard);
+    						}
+    				$scope.updateGameBoard = function(gameBoard, row, key,val){
+    					for(var gameRow in gameBoard)
+							if(gameBoard[gameRow].id == row && gameBoard[gameRow][key] == -1){
+								gameBoard[gameRow][key] = val;
+								break;
+								}
+							return gameBoard;	
+    				}		
 
 				});

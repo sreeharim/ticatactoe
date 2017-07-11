@@ -31,35 +31,4 @@
 	</table>
 </div>
 </body>
-<script type="text/javascript">
-	var socket = null;
-	var $scope = null;
-	$(function(){
-		socket = io.connect();
-		$scope = angular.element('[ng-controller=tttController]').scope();
-		socket.emit('register','register');
-		socket.on('registered user',function(data){
-			console.log(data);
-			$scope.value = data.val;
-			$scope.isMyTurn = data.turn;
-		});
-		socket.on('update board',function(data){
-			$scope.gameBoard = data;
-		});
-
-
-	});
-	function submitChanges(row,key){
-			$scope.gameBoard = updateGameBoard($scope.gameBoard,row,key);
-			socket.emit('submit move',$scope.gameBoard);
-		}
-	function updateGameBoard(gameBoard, row, key){
-		for(var gameRow in gameBoard)
-			if(gameBoard[gameRow].id == row && gameBoard[gameRow][key] == -1){
-				gameBoard[gameRow][key] = $scope.value;
-				break;
-			}
-			return gameBoard;	
-	}
-</script>
 </html>

@@ -17,6 +17,10 @@ var app = angular.module("tttApp",[])
 								$scope.gameBoard = data;
 								 $scope.$apply();
 								});
+					$scope.socket.on('your turn',function(data){
+								$scope.isMyTurn = data;
+								 //$scope.$apply();
+								});
 						
 					$scope.submitChange = function(row,key) {
         					$scope.gameBoard = $scope.updateGameBoard($scope.gameBoard,row,key,$scope.value);

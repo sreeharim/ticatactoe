@@ -20,7 +20,7 @@ socket.on('register',function(data){
 	}
 	else if(users.length == 1){
 		socket.value=1;
-		socket.turn = true;
+		socket.turn = false;
 		newUser.val = socket.value;
 		newUser.turn = socket.turn;
 		newUser.socket = socket;
@@ -29,12 +29,13 @@ socket.on('register',function(data){
 		
 	socket.emit('registered user',{'val':newUser.val,'turn':newUser.turn});
 });
- socket.on('send message',function(data){
- 	//console.log('recieved message'+ data);
- 	io.sockets.emit('new message',data);
- });
- socket.on('submit move',function(data){
 
+ socket.on('submit move',function(data){
+ 	socket.emit('your turn',false);
+ 	if(socket.value == 0)
+ 		users[1].socket.emit('your turn',true);
+ 	if(socket.value == 0)
+ 		users[0].socket.emit('your turn',true);
  	io.sockets.emit('update board',data);
- })
+ });
 });

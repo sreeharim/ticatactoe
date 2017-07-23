@@ -11,9 +11,10 @@ var app = angular.module("tttApp",[])
 					$scope.message = "Waiting for an opponent...";
 					$scope.socket = io.connect();
 					$scope.name="";
+					$scope.opponentConnected = false;
 					$scope.opponent=""; 
-					$scope.coins=-1;
-					$scope.opponentCoins=-1;
+					$scope.coins='';
+					$scope.opponentCoins='';
 					$scope.socket.on('registered user',function(data){
 								console.log(data);
 								$scope.value = data.val;
@@ -21,8 +22,11 @@ var app = angular.module("tttApp",[])
 								$scope.opponent=data.pair;
 								$scope.opponentCoins=data.pairCoins;
 								$scope.isMyTurn = data.turn;
-								if($scope.opponent != '')
-									 $scope.message = "Oppponent connected";
+								if($scope.opponent != ''){
+									$scope.opponentConnected = true;
+									$scope.message = "Oppponent connected";
+								}
+									 
 								$scope.$apply();
 								});
 					$scope.socket.on('update board',function(data){
@@ -31,7 +35,9 @@ var app = angular.module("tttApp",[])
 								});
 					
 					$scope.socket.on('opponent connected',function(data){
-								 $scope.opponent=data.pair;
+								 console.log(data);
+								 $scope.opponentConnected = true;
+								 $scope.opponent = data.pair;
 								 $scope.opponentCoins=data.pairCoins;
 								 $scope.isMyTurn = data.turn;
 								 $scope.message = "Oppponent connected"
@@ -62,7 +68,7 @@ var app = angular.module("tttApp",[])
     				$scope.enterGame = function(){
     					console.log("In game...");
     					$scope.loggedIn = true;
-    					$scope.socket.emit('register',$scope.nickname);
+    					$scope.socket.emit('register',$scope.name);
     				}		
 
 				});

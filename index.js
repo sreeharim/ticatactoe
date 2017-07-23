@@ -8,7 +8,7 @@ app.use(express.static(__dirname+"/public"));
 
 io.sockets.on('connection',function(socket){
 socket.on('register',function(data){
-	console.log('Registration started');
+	console.log('Registration started for user..'+data);
 	var newUser = {};//new user
 	var foundPair = false;
 	//default values
@@ -19,7 +19,7 @@ socket.on('register',function(data){
 	socket.pairName = '';
 	socket.pairIndex = -1;
 	socket.coins = 100;
-	socket.pairCoins = -1;
+	socket.pairCoins = '';
 
 	console.log('No of Users:'+users.length);
 	for(var i in users){

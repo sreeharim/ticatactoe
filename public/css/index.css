@@ -31,6 +31,19 @@
 #player2_Name{
 	width: 100px;
 }
+.err{
+	font-size: 12px;
+	height:15px;
+
+}
+#newGame{
+	width:120px;
+	position: relative;
+	left: 25%;
+}
+.halfspacer{
+	height:10px;
+}
 .blink{
   -moz-animation-duration: 800ms;
   -moz-animation-name: blink;

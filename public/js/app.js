@@ -8,6 +8,11 @@ var app = angular.module("tttApp",[])
 					$scope.isMyTurn = false;
 					$scope.loggedIn = false;
 					$scope.validMove =false;
+					$scope.isBiddingTime =false;
+					$scope.isBidSubmitted=false;
+					$scope.myBid=0;
+					$scope.mySubBid='';
+					$scope.oppSubtBid='';
 					$scope.message = "Waiting for an opponent...";
 					$scope.socket = io.connect();
 					$scope.name="";
@@ -17,6 +22,7 @@ var app = angular.module("tttApp",[])
 					$scope.coins='';
 					$scope.opponentCoins='';
 					$scope.invalidUsrMsg= '';
+					$scope.bidEnded= false;
 					$scope.socket.on('registered user',function(data){
 								console.log(data);
 								$scope.loggedIn = true;
@@ -36,7 +42,7 @@ var app = angular.module("tttApp",[])
 								 $scope.isMyTurn = data.turn;
 								 $scope.value = data.val;
 								 $scope.coins = data.coins;
-								 $scope.message = "Oppponent connected"
+								 $scope.message = $scope.opponent+" connected";
 								 $scope.$apply();
 								});
 					$scope.socket.on('opponent disconnected',function(data){
@@ -50,13 +56,53 @@ var app = angular.module("tttApp",[])
 					$scope.socket.on('your turn',function(data){
 								console.log('Your turn:' + data);
 								$scope.isMyTurn = data;
+								if(data)
+									$scope.message = 'Your turn';
+								else
+									$scope.message = $scope.opponent+"'s turn";
 								 $scope.$apply();
 								});
 					$scope.socket.on('invalid name',function(data){
 						$scope.invalidUsrMsg=data;
 						$scope.name='';
 						$scope.$apply();
-					});	
+					});
+					$scope.socket.on('prompt bid',function(data){
+						$scope.isBidSubmitted = false;
+						$scope.isBiddingTime=true;
+						$scope.bidEnded= false;
+						$scope.message=data;
+						$scope.$apply();
+					});
+					$scope.socket.on('wait opponent bid',function(data){
+						$scope.message="Waiting for "+$scope.opponent+"'s bid";
+						$scope.$apply();
+					});
+					$scope.socket.on('end bid',function(data){
+						$scope.isBiddingTime=false;
+						$scope.wonBid='';
+						$scope.lostBid='';
+						$scope.myBid=0;
+						$scope.$apply();
+					});
+					$scope.socket.on('lost bid',function(data){
+						$scope.opponentCoins=data.pairCoins;
+						$scope.bidEnded= true;
+						$scope.coins = data.coins;
+						$scope.oppSubtBid=data.wonBid;
+						$scope.mySubBid=data.lostBid;
+						$scope.message = 'You lost Bid';
+						$scope.$apply();
+					});
+					$scope.socket.on('won bid',function(data){
+						$scope.opponentCoins=data.pairCoins;
+						$scope.bidEnded= true;
+						$scope.coins = data.coins;
+						$scope.mySubBid=data.wonBid;
+						$scope.oppSubtBid=data.lostBid;
+						$scope.message = 'You won Bid';
+						$scope.$apply();
+					});					
 					$scope.submitChange = function(row,key) {
 							$scope.validMove = false;
         					$scope.gameBoard = $scope.updateGameBoard($scope.gameBoard,row,key,$scope.value);
@@ -85,5 +131,10 @@ var app = angular.module("tttApp",[])
     					$scope.opponentConnected = false;
 						$scope.opponentDisConnected = false;	
     				}
+    				$scope.submitBid = function(){
+    					$scope.socket.emit('submit bid',$scope.myBid);
+    					$scope.isBidSubmitted = true;
+    				}
+
 
 				});

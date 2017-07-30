@@ -14,6 +14,12 @@
     margin-left: -100px;
     margin-top: -50px;
 }  
+.biddingArea{
+	width: 200px;
+    top: 80%;
+    position: absolute;
+    left: 40%;
+}
 #scoreCard{
 	margin-left: 10px;
 	margin-top: 20px;
@@ -67,7 +73,15 @@
   font-size: 20px;
   margin-left: 20px;
 }
-
+#bidCard{
+	margin-top: 20px
+}
+.playerBid{
+	width:95px;
+}
+.playerBidText{
+	font-size: 10px;
+}
 @-moz-keyframes blink {
   from {
     opacity: 1;

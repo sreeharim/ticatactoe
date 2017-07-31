@@ -36,7 +36,13 @@ socket.on('register',function(data){
  	socket.emit('your turn',false);
  	socket.emit('update board',data);
  	pairSocket.emit('update board',data);
- 	setTimeout(function(){
+ 	var gameOver = isGameOver(data);
+ 	if(gameOver){
+ 		socket.emit('game over','You won');
+ 		pairSocket.emit('game over','You lost');	
+ 	}
+ 	else{
+ 		setTimeout(function(){
  			socket.bidSubmit=false;
  			socket.bidAmount=0;
  			pairSocket.bidSubmit=false;
@@ -44,9 +50,12 @@ socket.on('register',function(data){
 			pairSocket.emit('prompt bid','Submit bid');
 			socket.emit('prompt bid','Submit bid');	
 		 }, 5000);
+ 	}
+ 	
  });
  //on newGame request find a free user
  socket.on("new game",function(data){
+ 	initSocket(socket.name);
  	newGame(socket.name);	
  });
  //on disconnect remove user and inform opponent
@@ -105,6 +114,27 @@ socket.on('register',function(data){
  		}
  	}
  });
+ function isGameOver(data){
+ 	//checking rows
+ 	for(var row in data){
+ 		if(data[row].zero!='' && data[row].zero == data[row].one && data[row].zero == data[row].two){
+ 			return true;
+ 		}
+ 	}
+ 	//checking coloums
+ 	if((data[0].zero !='' && data[0].zero == data[1].zero && data[0].zero == data[2].zero)||
+ 	   (data[0].one !='' && data[0].one == data[1].one && data[0].one == data[2].one)||
+ 	   (data[0].two !='' && data[0].two == data[1].two && data[0].two == data[2].two)){
+ 		return true;
+ 	}
+ 	//checking diagonals
+ 	if((data[0].zero != '' && data[0].zero == data[1].one && data[0].zero == data[2].two)||
+ 	   (data[0].two != '' && data[0].two == data[1].one && data[0].two == data[2].zero)){
+ 		return true;
+ 	}
+ 		
+ 	return false;
+ }
 function initSocket(name){
 	//default values
 	socket.value = 'X';

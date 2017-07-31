@@ -23,6 +23,7 @@ var app = angular.module("tttApp",[])
 					$scope.opponentCoins='';
 					$scope.invalidUsrMsg= '';
 					$scope.bidEnded= false;
+					$scope.gameOver = false;
 					$scope.socket.on('registered user',function(data){
 								console.log(data);
 								$scope.loggedIn = true;
@@ -59,12 +60,17 @@ var app = angular.module("tttApp",[])
 								if(data)
 									$scope.message = 'Your turn';
 								else
-									$scope.message = $scope.opponent+"'s turn";
+									$scope.message = "Waiting..";
 								 $scope.$apply();
 								});
 					$scope.socket.on('invalid name',function(data){
 						$scope.invalidUsrMsg=data;
 						$scope.name='';
+						$scope.$apply();
+					});
+					$scope.socket.on('game over',function(data){
+						$scope.gameOver = true;
+						$scope.message=data;
 						$scope.$apply();
 					});
 					$scope.socket.on('prompt bid',function(data){
@@ -125,7 +131,8 @@ var app = angular.module("tttApp",[])
     					$scope.invalidUsrMsg='';
     				}
     				$scope.newGame = function(){
-    					$scope.gameBoard =gameBoard;
+    					clearBoard();
+    					$scope.gameOver = false;
     					$scope.socket.emit('new game','');
     					$scope.message = "Waiting for an opponent...";
     					$scope.opponentConnected = false;
@@ -134,6 +141,13 @@ var app = angular.module("tttApp",[])
     				$scope.submitBid = function(){
     					$scope.socket.emit('submit bid',$scope.myBid);
     					$scope.isBidSubmitted = true;
+    				}
+    				function clearBoard(){
+    					for(var row in $scope.gameBoard){
+    						$scope.gameBoard[row].zero='';
+    						$scope.gameBoard[row].one='';
+    						$scope.gameBoard[row].two='';
+    					}
     				}
 
 

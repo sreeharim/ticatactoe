@@ -36,7 +36,7 @@
 		</div>
 </div>
 <!-- Game Board -->
-<div id="tic-tac-toe" ng-show="loggedIn && !isBiddingTime">
+<div id="tic-tac-toe" ng-show="loggedIn && !isBiddingTime && !connectToUser">
 	<div class="spacer"></div>
 	<div class="spacer"></div>
 	<div id="console" class="blink text-warning">{{message}}</div>
@@ -59,7 +59,7 @@
 	<button id="newGame" class="btn btn-success btn-block" ng-click="newGame()" ng-show="opponentDisConnected || gameOver">New Game</button> 
  </div>
  <!-- Bidding Board-->
- <div id="biddingArea" class="login" ng-show="loggedIn && isBiddingTime" >
+ <div id="biddingArea" class="login" ng-show="loggedIn && isBiddingTime && !connectToUser" >
  	<div class="spacer"></div>
 	<div id="console" class="blink text-warning">{{message}}</div>
 	<div class="spacer"></div>
@@ -79,8 +79,18 @@
 				<div id="player2_Bid" class="playerBidText">Opponent's Bid</div>
 				<div id="player2_BidAmount">{{oppSubtBid}}</div>
 			</div>
-</div>
+		</div>
 	</form>	
+ </div>
+
+ <!--User List  -->
+ <div id="connectToUser" ng-show="loggedIn && !isBiddingTime && connectToUser" >
+ 	<div class="spacer"></div>
+	<div id="console" class="blink text-warning">{{message}}</div>
+	<div class="spacer"></div>
+	<ul ng-repeat="user in users">
+      <li>{{user.name}}</li>
+    </ul>
  </div>
 </body>
 </html>

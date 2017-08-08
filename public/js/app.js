@@ -10,6 +10,7 @@ var app = angular.module("tttApp",[])
 					$scope.validMove =false;
 					$scope.isBiddingTime =false;
 					$scope.isBidSubmitted=false;
+					$scope.connectToUser = false;
 					$scope.myBid=0;
 					$scope.mySubBid='';
 					$scope.oppSubtBid='';
@@ -24,6 +25,7 @@ var app = angular.module("tttApp",[])
 					$scope.invalidUsrMsg= '';
 					$scope.bidEnded= false;
 					$scope.gameOver = false;
+					$scope.users=[];
 					$scope.socket.on('registered user',function(data){
 								console.log(data);
 								$scope.loggedIn = true;
@@ -33,7 +35,15 @@ var app = angular.module("tttApp",[])
 								$scope.gameBoard = data;
 								 $scope.$apply();
 								});
-					
+					$scope.socket.on('update users',function(data){
+								$scope.users = data;
+								 $scope.$apply();
+								});
+					$scope.socket.on('show users',function(data){
+								$scope.message = "Choose a player";
+								$scope.connectToUser = true;
+								 $scope.$apply();
+								});
 					$scope.socket.on('opponent connected',function(data){
 								 console.log(data);
 								 $scope.opponentConnected = true;

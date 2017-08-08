@@ -23,10 +23,13 @@ socket.on('register',function(data){
 		var newUser = {};//new user
 		var foundPair = false;
 		initSocket(data);
-		newGame(data);
+		//newGame(data);
 		newUser.socket = socket;
 		users.push(newUser); 
 		socket.emit('registered user','success');
+		console.log("No of users:"+users.length);
+		io.sockets.emit('update users',getUserList());
+		socket.emit('show users','');
 	}
 	
 });
@@ -60,22 +63,25 @@ socket.on('register',function(data){
  });
  //on disconnect remove user and inform opponent
  socket.on('disconnect',function(data){
- 	console.log('Disconnecting user....'+socket.name);
- 	var pairSocket = findPairSocket(socket.pairName);
- 	if(pairSocket){
- 		pairSocket.isPaired = false;
- 		pairSocket.value = 'X';
-		pairSocket.turn = false;
-		pairSocket.isPaired = false;
-		pairSocket.pairName = '';
-		pairSocket.coins = 100;
-		pairSocket.pairCoins = '';
-		pairSocket.bidSubmit = false;
-		pairSocket.bidAmount = 0;
- 		pairSocket.emit('opponent disconnected','Opponent disconnected');	
+ 	if(socket.name){
+ 		console.log('Disconnecting user....'+socket.name);
+ 		var pairSocket = findPairSocket(socket.pairName);
+ 		if(pairSocket){
+ 			pairSocket.isPaired = false;
+ 			pairSocket.value = 'X';
+			pairSocket.turn = false;
+			pairSocket.isPaired = false;
+			pairSocket.pairName = '';
+			pairSocket.coins = 100;
+			pairSocket.pairCoins = '';
+			pairSocket.bidSubmit = false;
+			pairSocket.bidAmount = 0;
+ 			pairSocket.emit('opponent disconnected','Opponent disconnected');	
+ 		}
+ 		index = getUserIndex(socket.name)
+ 		users.splice(index,1);
  	}
- 	index = getUserIndex(socket.name)
- 	users.splice(index,1);
+ 	
  });
  socket.on('submit bid', function(data){
  	console.log('Submitting bid');
@@ -176,7 +182,13 @@ function getUserIndex(name){
 			return i;
 	
 }
-
+//get list of users and their status
+function getUserList(){
+	var userList = [];
+	for(var i in users)
+		userList.push({"name":users[i].socket.name,"availability":!(users[i].socket.isPaired) });
+	return userList;
+}
 function getUnpairedSocket(name){
 	for(var i in users){
 		if(!(users[i].socket.isPaired) && users[i].socket.name != name)

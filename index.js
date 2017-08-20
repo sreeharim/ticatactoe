@@ -61,6 +61,11 @@ socket.on('register',function(data){
  	initSocket(socket.name);
  	newGame(socket.name);	
  });
+ //on newGame request find a free user
+ socket.on("send req",function(data){
+ 	//initSocket(socket.name);
+ 	newReq(socket.name,data);	
+ });
  //on disconnect remove user and inform opponent
  socket.on('disconnect',function(data){
  	if(socket.name){
@@ -80,6 +85,7 @@ socket.on('register',function(data){
  		}
  		index = getUserIndex(socket.name)
  		users.splice(index,1);
+ 		io.sockets.emit('update users',getUserList());
  	}
  	
  });
@@ -175,6 +181,10 @@ function newGame(name){
 		 }, 3000);
 	}
 }
+function newReq(from,to){
+	var toSocket = findPairSocket(to);
+	toSocket.emit('request game',from);
+}
 
 function getUserIndex(name){
 	for(var i in users)
@@ -186,7 +196,8 @@ function getUserIndex(name){
 function getUserList(){
 	var userList = [];
 	for(var i in users)
-		userList.push({"name":users[i].socket.name,"availability":!(users[i].socket.isPaired) });
+		if(!(users[i].socket.isPaired))
+		userList.push({"name":users[i].socket.name});
 	return userList;
 }
 function getUnpairedSocket(name){

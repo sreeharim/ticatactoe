@@ -126,7 +126,12 @@
 #tic-tac-toe { position: absolute;top: 20%;left: 15%;}  
 }
 
- /*user login*/
+#connectToUser{
+    margin:30px;
+    
+
+}
+
 
 
 /*******tic-tac-toe END******/

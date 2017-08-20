@@ -11,7 +11,7 @@ var app = angular.module("tttApp",[])
 					$scope.isBiddingTime =false;
 					$scope.isBidSubmitted=false;
 					$scope.connectToUser = false;
-					$scope.myBid=0;
+					$scope.myBid='';
 					$scope.mySubBid='';
 					$scope.oppSubtBid='';
 					$scope.message = "Waiting for an opponent...";
@@ -61,6 +61,7 @@ var app = angular.module("tttApp",[])
 								$scope.opponentConnected = false;
 								$scope.opponentDisConnected = true;
 								$scope.message= data;
+								$scope.isBiddingTime=false;
 								$scope.$apply();
 					});
 
@@ -98,7 +99,7 @@ var app = angular.module("tttApp",[])
 						$scope.isBiddingTime=false;
 						$scope.wonBid='';
 						$scope.lostBid='';
-						$scope.myBid=0;
+						$scope.myBid='';
 						$scope.$apply();
 					});
 					$scope.socket.on('lost bid',function(data){

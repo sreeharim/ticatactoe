@@ -64,7 +64,21 @@ socket.on('register',function(data){
  //on newGame request find a free user
  socket.on("send req",function(data){
  	//initSocket(socket.name);
- 	newReq(socket.name,data);	
+ 	newReq(socket.name,data);
+ 	io.sockets.emit('remove users',{'name1':socket.name,'name2':data});
+ });
+  socket.on("send resp",function(data){
+  	var upSocket = findPairSocket(data.name);
+ 	if(data.accept)
+ 		newGame(data.name);
+ 	else{
+ 		upSocket.emit('declined req','');
+ 		io.sockets.emit('update users',getUserList());
+ 		setTimeout(function(){ 
+ 			upSocket.emit('show users','');
+ 			 },3000);
+ 	}
+
  });
  //on disconnect remove user and inform opponent
  socket.on('disconnect',function(data){
@@ -161,17 +175,18 @@ function initSocket(name){
 	socket.bidAmount = 0;
 } 
 function newGame(name){
-	var upSocket = getUnpairedSocket(name);
+	var upSocket = findPairSocket(name);
 	if(upSocket){
 		if(upSocket.value == 'X') //setting up new user value based on pair value
 			socket.value = 'O';
 		else
 			socket.value = 'X';
-		socket.isPaired = true;
-		socket.name = name;
+		
 		socket.pairName = upSocket.name;
+		upSocket.pairName = socket.name; 
 		socket.pairCoins = upSocket.coins;
-		upSocket.pairName = name; 
+		upSocket.pairCoins = socket.coins
+		socket.isPaired = true;
 		upSocket.isPaired = true; 		
 		upSocket.emit('opponent connected',{'val':upSocket.value,'turn':upSocket.turn,'coins':upSocket.coins,'pair':socket.name,'pairCoins':socket.coins});
 		socket.emit('opponent connected',{'val':socket.value,'turn':socket.turn,'coins':socket.coins,'pair':socket.pairName,'pairCoins':socket.pairCoins});

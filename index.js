@@ -38,21 +38,43 @@ socket.on('register',function(data){
  	var pairSocket = findPairSocket(socket.pairName);
  	socket.emit('your turn',false);
  	socket.emit('update board',data);
- 	pairSocket.emit('update board',data);
- 	var gameOver = isGameOver(data);
- 	if(gameOver){
+ 	if(pairSocket)
+ 		pairSocket.emit('update board',data);
+ 	var won = didIWin(data);
+ 	if(won){
  		socket.emit('game over','You won');
- 		pairSocket.emit('game over','You lost');	
+ 		if(pairSocket)
+	 		pairSocket.emit('game over','You lost');	
  	}
  	else{
- 		setTimeout(function(){
+ 		var drawn = isGameDrawn(data);
+ 		if(drawn){
+ 			if(pairSocket && pairSocket.coins > socket.coins){
+ 				socket.emit('game over','You lost');
+	 			pairSocket.emit('game over','You won');
+ 			}
+ 			else if(pairSocket && pairSocket.coins < socket.coins){
+ 				socket.emit('game over','You won');
+	 			pairSocket.emit('game over','You lost');
+ 			}
+ 			else if(pairSocket && pairSocket.coins == socket.coins){
+ 				socket.emit('game over','Game drawn');
+	 			pairSocket.emit('game over','Game drawn');
+ 			}
+ 		}
+ 		else{
+ 			setTimeout(function(){
  			socket.bidSubmit=false;
  			socket.bidAmount=0;
- 			pairSocket.bidSubmit=false;
- 			pairSocket.bidAmount=0;  
-			pairSocket.emit('prompt bid','Submit bid');
+ 			if(pairSocket){
+ 				pairSocket.bidSubmit=false;
+ 				pairSocket.bidAmount=0;  
+				pairSocket.emit('prompt bid','Submit bid');
+ 			}
 			socket.emit('prompt bid','Submit bid');	
-		 }, 5000);
+		 }, 5000);	
+ 		}
+ 		
  	}
  	
  });
@@ -61,21 +83,39 @@ socket.on('register',function(data){
  	initSocket(socket.name);
  	newGame(socket.name);	
  });
+ socket.on("end game",function(data){
+ 	var pairSocket = findPairSocket(socket.pairName);
+ 	initSocket(socket.name);
+ 	socket.isPaired = false;
+ 	
+ 	if(pairSocket){
+ 		pairSocket.isPaired = false;
+ 		pairSocket.emit('opponent left','Opponent left');
+ 		
+ 	}
+ 	io.sockets.emit('update users',getUserList());
+ 	socket.emit('show users','');
+ 	if(pairSocket)
+ 		pairSocket.emit('show users','');
+ });
  //on newGame request find a free user
  socket.on("send req",function(data){
- 	//initSocket(socket.name);
+ 	initSocket(socket.name);
  	newReq(socket.name,data);
  	io.sockets.emit('remove users',{'name1':socket.name,'name2':data});
  });
   socket.on("send resp",function(data){
+  	initSocket(socket.name);
   	var upSocket = findPairSocket(data.name);
  	if(data.accept)
  		newGame(data.name);
  	else{
- 		upSocket.emit('declined req','');
- 		io.sockets.emit('update users',getUserList());
+ 		if(upSocket)
+ 			upSocket.emit('declined req','');
  		setTimeout(function(){ 
- 			upSocket.emit('show users','');
+ 			io.sockets.emit('update users',getUserList());
+ 			if(upSocket)
+ 				upSocket.emit('show users','');
  			 },3000);
  	}
 
@@ -85,8 +125,11 @@ socket.on('register',function(data){
  	if(socket.name){
  		console.log('Disconnecting user....'+socket.name);
  		var pairSocket = findPairSocket(socket.pairName);
+ 		index = getUserIndex(socket.name)
+ 		users.splice(index,1);
+ 		socket.name='';
+ 		io.sockets.emit('update users',getUserList());
  		if(pairSocket){
- 			pairSocket.isPaired = false;
  			pairSocket.value = 'X';
 			pairSocket.turn = false;
 			pairSocket.isPaired = false;
@@ -97,9 +140,7 @@ socket.on('register',function(data){
 			pairSocket.bidAmount = 0;
  			pairSocket.emit('opponent disconnected','Opponent disconnected');	
  		}
- 		index = getUserIndex(socket.name)
- 		users.splice(index,1);
- 		io.sockets.emit('update users',getUserList());
+ 		
  	}
  	
  });
@@ -111,16 +152,18 @@ socket.on('register',function(data){
  	if(pairSocket){
  		if(pairSocket.bidSubmit){
  			if(pairSocket.bidAmount >= socket.bidAmount){//opponent won the bid
- 				socket.coins+=pairSocket.bidAmount;
- 				pairSocket.coins-=pairSocket.bidAmount;
+ 				var bidDiff = pairSocket.bidAmount-socket.bidAmount
+ 				socket.coins+=bidDiff;
+ 				pairSocket.coins-=bidDiff;
  				socket.turn = false;
 				pairSocket.turn = true;
  				socket.emit('lost bid',{'coins':socket.coins,'pairCoins':pairSocket.coins,'wonBid':pairSocket.bidAmount,'lostBid':socket.bidAmount});
  				pairSocket.emit('won bid',{'coins':pairSocket.coins,'pairCoins':socket.coins,'wonBid':pairSocket.bidAmount,'lostBid':socket.bidAmount});
  			}
  			else{
- 				socket.coins-=socket.bidAmount;
- 				pairSocket.coins+=socket.bidAmount;
+ 				var bidDiff = socket.bidAmount-pairSocket.bidAmount;
+ 				socket.coins-=bidDiff;
+ 				pairSocket.coins+=bidDiff;
  				socket.turn = true;
 				pairSocket.turn = false;
  				socket.emit('won bid',{'coins':socket.coins,'pairCoins':pairSocket.coins,'wonBid':socket.bidAmount,'lostBid':pairSocket.bidAmount});
@@ -140,7 +183,7 @@ socket.on('register',function(data){
  		}
  	}
  });
- function isGameOver(data){
+ function didIWin(data){
  	//checking rows
  	for(var row in data){
  		if(data[row].zero!='' && data[row].zero == data[row].one && data[row].zero == data[row].two){
@@ -158,8 +201,15 @@ socket.on('register',function(data){
  	   (data[0].two != '' && data[0].two == data[1].one && data[0].two == data[2].zero)){
  		return true;
  	}
- 		
  	return false;
+ }
+
+ function isGameDrawn(data){
+ 	//check if the all the cells are filled
+ 	for(var row in data)
+ 		if(data[row].zero=='' || data[row].one == '' || data[row].two =='')
+ 			return false;
+ 	return true;	
  }
 function initSocket(name){
 	//default values
@@ -168,7 +218,6 @@ function initSocket(name){
 	socket.isPaired = false;
 	socket.name = name;
 	socket.pairName = '';
-	socket.pairIndex = -1;
 	socket.coins = 100;
 	socket.pairCoins = '';
 	socket.bidSubmit = false;
@@ -190,15 +239,19 @@ function newGame(name){
 		upSocket.isPaired = true; 		
 		upSocket.emit('opponent connected',{'val':upSocket.value,'turn':upSocket.turn,'coins':upSocket.coins,'pair':socket.name,'pairCoins':socket.coins});
 		socket.emit('opponent connected',{'val':socket.value,'turn':socket.turn,'coins':socket.coins,'pair':socket.pairName,'pairCoins':socket.pairCoins});
-		setTimeout(function(){ 
-			upSocket.emit('prompt bid','Submit bid');
-			socket.emit('prompt bid','Submit bid');	
+		setTimeout(function(){
+		 	if(upSocket.name !='' && socket.name !=''){
+		 	upSocket.emit('prompt bid','Submit bid');
+			socket.emit('prompt bid','Submit bid');		
+		 	}
+			
 		 }, 3000);
 	}
 }
 function newReq(from,to){
 	var toSocket = findPairSocket(to);
-	toSocket.emit('request game',from);
+	if(toSocket)
+		toSocket.emit('request game',from);
 }
 
 function getUserIndex(name){
